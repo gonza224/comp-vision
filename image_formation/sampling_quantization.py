@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
+from utils import original_signal
+
 signal_freq = 5.0 # in Hz
 duration = 2 # in seconds
 sampling_freq = 8 # in Hz
@@ -11,19 +13,15 @@ max_signal = 1 # max signal value
 # Derived
 n_levels = 2 ** num_bits
 
-
-def original_signal(t):
-    return np.sin(2 * np.pi * signal_freq * t)
-
 def main():
     # Original signal over a 2-second time window
     t_points = np.linspace(0, duration, 1000, endpoint=False)  # 1000 pts in [0, duration)
-    cont_signal = original_signal(t_points)
+    cont_signal = original_signal(t_points, signal_freq)
 
     # Sample the original signal.
     n = int(sampling_freq * duration)
     t_sampled = np.linspace(0, duration, n, endpoint=False)
-    sampled_signal = original_signal(t_sampled)
+    sampled_signal = original_signal(t_sampled, signal_freq)
 
     # Quantize the sampled signal
     scaled = (sampled_signal - min_signal) / (max_signal - min_signal) * (n_levels - 1)
