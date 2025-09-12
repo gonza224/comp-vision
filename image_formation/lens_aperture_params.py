@@ -48,7 +48,6 @@ def lens_to_image_distance_plot():
     plt.grid(True, which='both', linestyle='--', alpha=0.5)
     plt.show()
 
-
 def aperture_diameter_plot():
     # Define focal-length domain (in mm)
     f_min = 10
