@@ -89,6 +89,6 @@ def real_world_aperture_diameters():
         print(f"Aperture diameter for {f}mm f/{N}: {D:.2f}mm")
 
 if __name__ == "__main__":
-    # lens_to_image_distance_plot()
+    lens_to_image_distance_plot()
     # aperture_diameter_plot()
-    real_world_aperture_diameters()
+    # real_world_aperture_diameters()
