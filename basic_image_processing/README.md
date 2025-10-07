@@ -67,3 +67,84 @@
 Although both methods work really well, the histogram eq. result is much sharper. Our human eye can identify details we couldn’t before (e.g., the spots on the subject’s face). We also notice a much more glaring separation between the subject and the background.
 
 ![Comparison between both methods](./images/output_comparison.png)
+
+# Exercise 2: Non-Linear Filtering and Edge Detection
+
+1. new_img = median_filter(img, size=3) implementation
+    ```py
+    def median_filter(img, size=3):
+        # Find how much padding should be added
+        k = size // 2
+        # Add padding of 0
+        g_pad = np.pad(img, k)
+        h, w = img.shape
+        # Create output image array
+        out = np.empty_like(img)
+
+        # Go through all pixels of the image
+        for y in range(h):
+            for x in range(w):
+                # Select SizexSize window
+                window = g_pad[y:y+size, x:x+size]
+                
+                #Set out pixel to median
+                out[y, x] = np.median(window)
+        return out.astype(img.dtype)
+    ```
+2. grad_magnitude = calculate_gradient(img) implementation
+    ```py
+    import math
+
+    def apply_convolution(img: np.ndarray, kernel: np.ndarray) -> np.ndarray:
+        k = kernel.shape[0]
+        r = k // 2
+
+        # Pad the image with edges meaning we have a padding of r pixels on each side
+        padded = np.pad(img, ((r, r), (r, r)))
+        H, W = img.shape
+        out = np.zeros((H, W), dtype=np.float32)
+        ker = kernel.astype(np.float32)
+
+        for y in range(H):
+            for x in range(W):
+                acc = 0.0
+                for j in range(-r, r+1):
+                    for i in range(-r, r+1):
+                        acc += float(padded[y + j + r, x + i + r]) * float(ker[j + r, i + r])
+                out[y, x] = acc
+        
+        return out
+
+    sobel_x = np.array([[-1,-2,-1],
+                        [ 0, 0, 0],
+                        [ 1, 2, 1]], dtype=np.float32)
+                                
+    sobel_y = np.array([[-1,0,1],
+                        [-2,0,2],
+                        [-1,0,1]], dtype=np.float32)
+
+    def calculate_gradient(img):
+        sobel_x_img = apply_convolution(img, sobel_x)
+        sobel_y_img = apply_convolution(img, sobel_y)
+
+        H, W = sobel_x_img.shape
+        # Output image array
+        mag = np.empty((H, W), dtype=np.float32)
+
+        # Go through every pixel
+        for y in range(H):
+            for x in range(W):
+                gx = float(sobel_x_img[y, x])
+                gy = float(sobel_y_img[y, x])
+                mag[y, x] = math.sqrt(gx*gx + gy*gy)
+        return mag
+
+
+    ```
+
+## Analysis
+
+![Comparison original img vs magnitude vs magnitude and median](./images/output_sobels.png)
+We can see that noise is pretty much prevalent after the magnitude calculation. Because salt-and-pepper noise is basically outliers, our Sobel filters pretty much output it back into the gradient. Since we are applying the median after the Sobels, the context pixels (around the pixel) that would have stabilized the median filter are gone, the magnitude image is mostly edges and spikes and therefore the median doesn’t get rid of the noise.
+
+If we apply it in reverse order, median and after that magnitude, we can see a much better featurization of our image. (Last image left to right)
