@@ -148,3 +148,53 @@ Although both methods work really well, the histogram eq. result is much sharper
 We can see that noise is pretty much prevalent after the magnitude calculation. Because salt-and-pepper noise is basically outliers, our Sobel filters pretty much output it back into the gradient. Since we are applying the median after the Sobels, the context pixels (around the pixel) that would have stabilized the median filter are gone, the magnitude image is mostly edges and spikes and therefore the median doesn’t get rid of the noise.
 
 If we apply it in reverse order, median and after that magnitude, we can see a much better featurization of our image. (Last image left to right)
+
+# Exercise 3: Simple Sobel-based edge detector
+
+1. Extend the previous implementation of calculate_gradient() to also calculate the gradient direction, $\theta$
+
+    ```py
+    def calculate_gradient(img: np.ndarray):
+        gx = apply_convolution(img, sobel_x)
+        gy = apply_convolution(img, sobel_y)
+
+        H, W = gx.shape
+        grad_magnitude = np.empty((H, W), dtype=np.float32)
+        grad_angle     = np.empty((H, W), dtype=np.float32)  # radians in [-pi, pi]
+
+        for y in range(H):
+            for x in range(W):
+                gxx = gx[y, x]
+                gyy = gy[y, x]
+                grad_magnitude[y, x] = math.sqrt(gxx*gxx + gyy*gyy)
+                grad_angle[y, x]     = math.atan2(gyy, gxx)
+
+        return grad_magnitude, grad_angle
+    ```
+
+2. edge_map = sobel_edge_detector(img, threshold) implementation
+
+    ```py
+    def sobel_edge_detector(img, threshold):
+        out_img_mag, _ = calculate_gradient(img)
+        return (out_img_mag >= threshold).astype(np.uint8) * 255
+    ```
+
+3. edge_directional_map = directional_edge_detector(img, direction_range) implementation
+
+    ```py
+    def directional_edge_detector(img, direction_range):
+        _, out_img_dir = calculate_gradient(img)
+        
+        deg = (np.degrees(out_img_dir) + 360.0) % 360.0
+        low, high = direction_range
+        mask = (deg >= low) & (deg <= high)
+
+        return (mask.astype(np.uint8) * 255)
+    ```
+
+## Analysis
+![Comparison original img vs magnitude edge detector vs directional edge detector vs canny filter](./images/output_detectors.png)
+- Our detectors depend heavily in the parameters.
+- For the parameters used, magnitude edge detector (thresh=127) performs really well, while directional edge detector (thresh=(40, 50)) is not really helpful.
+- Canny Filter does a really good job finding the edges of the image even with no hard parameters inputted.
